@@ -1,0 +1,19 @@
+# depslib dependency file v1.0
+1481816257 source:e:\code\c++\server\main.cpp
+	<iostream>
+	<conio.h>
+	<network.h>
+	<windows.h>
+
+1481816907 e:\code\c++\server\include\network.h
+	<ws2tcpip.h>
+	<windows.h>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<stdlib.h>
+	<stdio.h>
+	<string>
+
+1481816801 source:e:\code\c++\server\src\network.cpp
+	"network.h"
+
