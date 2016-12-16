@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
+#include <vector>
 
 #define DEFAULT_BUFLEN 512
 
@@ -24,16 +25,20 @@ class network
         bool mail(std::string message);
         std::string receive();
         bool quit();
-        bool isConnected();
+        bool startListening();
+        void stopListening();
+        bool addPendingConnections();
+        bool connected;
+        bool listens;
+        bool host;
+                std::vector <SOCKET> peers;
     protected:
 
     private:
         WSADATA wsaData;
         int iResult;
         SOCKET ListenSocket = INVALID_SOCKET;
-        SOCKET ConnectSocket = INVALID_SOCKET;
         struct addrinfo *result = NULL, *ptr = NULL, hints;
-        bool connected;
 };
 
 #endif // NETWORK_H

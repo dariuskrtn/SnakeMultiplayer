@@ -1,9 +1,11 @@
-#include "network.h"
+#include "../include/network.h"
 
 
 network::network()
 {
     connected = false;
+    listens = false;
+    host = false;
 }
 
 network::~network()
@@ -24,6 +26,7 @@ bool network::initialize()
 bool network::createServer(char* port)
 {
     connected = false;
+    host = true;
     ZeroMemory(&hints, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
@@ -37,7 +40,12 @@ bool network::createServer(char* port)
         return false;
     }
 
-    // Create a SOCKET for connecting to server
+    return true;
+}
+
+bool network::startListening()
+{
+        // Create a SOCKET for connecting to server
     ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (ListenSocket == INVALID_SOCKET) {
         printf("socket klaida: %d\n", WSAGetLastError());
@@ -45,7 +53,6 @@ bool network::createServer(char* port)
         WSACleanup();
         return false;
     }
-
     // Setup the TCP listening socket
     iResult = bind( ListenSocket, result->ai_addr, (int)result->ai_addrlen);
     if (iResult == SOCKET_ERROR) {
@@ -55,9 +62,6 @@ bool network::createServer(char* port)
         WSACleanup();
         return false;
     }
-
-    freeaddrinfo(result);
-
     iResult = listen(ListenSocket, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
         printf("listen klaida: %d\n", WSAGetLastError());
@@ -65,24 +69,45 @@ bool network::createServer(char* port)
         WSACleanup();
         return false;
     }
-    ConnectSocket = accept(ListenSocket, NULL, NULL);
-    if (ConnectSocket == INVALID_SOCKET) {
-        printf("accept klaida: %d\n", WSAGetLastError());
-        closesocket(ListenSocket);
-        WSACleanup();
+    listens = true;
+    return true;
+}
+
+void network::stopListening()
+{
+    listens = false;
+    closesocket(ListenSocket);
+}
+
+bool network::addPendingConnections()
+{
+    SOCKET ConnectSocket = INVALID_SOCKET;
+    fd_set readSet;
+    FD_ZERO(&readSet);
+    FD_SET(ListenSocket, &readSet);
+    timeval timeout;
+    timeout.tv_sec = 0;  // Zero timeout (poll)
+    timeout.tv_usec = 0;
+    if(select(ListenSocket, &readSet, NULL, NULL, &timeout) == 1)
+    {
+        ConnectSocket=accept(ListenSocket, NULL, NULL);
+    } else {
         return false;
     }
-    // No longer need server socket
-    closesocket(ListenSocket);
+    if (ConnectSocket == INVALID_SOCKET) {
+        printf("accept klaida: %d\n", WSAGetLastError());
+        return false;
+    }
 
     u_long iMode=1;
 	ioctlsocket(ConnectSocket,FIONBIO,&iMode);
-    connected = true;
-    return true;
+	peers.push_back(ConnectSocket);
+	return true;
 }
 
 bool network::connectToServer(char* host, char* port)
 {
+    host = false;
     connected = false;
     ZeroMemory( &hints, sizeof(hints) );
     hints.ai_family = AF_UNSPEC;
@@ -96,7 +121,7 @@ bool network::connectToServer(char* host, char* port)
         WSACleanup();
         return false;
     }
-
+    SOCKET ConnectSocket = INVALID_SOCKET;
     // Attempt to connect to an address until one succeeds
     for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
 
@@ -128,59 +153,64 @@ bool network::connectToServer(char* host, char* port)
     }
     u_long iMode=1;
 	ioctlsocket(ConnectSocket,FIONBIO,&iMode);
-
+    peers.push_back(ConnectSocket);
     connected = true;
     return true;
 }
 
 bool network::mail(std::string message)
 {
+    if (peers.size()==0) return false;
     char *sendbuf = (char*)message.c_str();
-    iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
-    if (iResult == SOCKET_ERROR) {
-        printf("send klaida: %d\n", WSAGetLastError());
-        closesocket(ConnectSocket);
-        WSACleanup();
-        connected = false;
-        return false;
+    for (int i=0; i<peers.size(); i++) {
+    iResult = send(peers[i], sendbuf, (int)strlen(sendbuf), 0);
+    if (iResult == -1) {
+        printf("Vartotojas atsijunge\n");
+        peers.erase(peers.begin()+i);
+        i--;
+    }
+
     }
     return true;
 }
 
 std::string network::receive()
 {
+        for (int i=0; i<peers.size(); i++) {
         char recvbuf[DEFAULT_BUFLEN];
         memset(recvbuf, 0, sizeof(recvbuf));
         int recvbuflen = DEFAULT_BUFLEN;
-        iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-        if (iResult > 0)
-            return std::string(recvbuf, iResult);
+        iResult = recv(peers[i], recvbuf, recvbuflen, 0);
+        if (iResult > 0) {
+            std::string message = std::string(recvbuf, iResult);
+            if (host) mail(message);
+            return message;
+        }
         else if (iResult == 0) {
             printf("Connection closed\n");
             quit();
             return "cls";
         } else {
             //printf("recv failed with error: %d\n", WSAGetLastError());
-            return "err";
+            continue;
         }
+        }
+        return "err";
 }
 
 bool network::quit()
 {
     connected = false;
-    iResult = shutdown(ConnectSocket, SD_SEND);
+    for (int i=0; i<peers.size(); i++) {
+    iResult = shutdown(peers[i], SD_SEND);
     if (iResult != 0) {
         printf("shutdown failed with error: %d\n", WSAGetLastError());
-        closesocket(ConnectSocket);
+        closesocket(peers[i]);
         WSACleanup();
         return false;
     }
-    closesocket(ConnectSocket);
+    closesocket(peers[i]);
     WSACleanup();
+    }
     return true;
-}
-
-bool network::isConnected()
-{
-    return connected;
 }
