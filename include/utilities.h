@@ -8,10 +8,10 @@ class utilities
     public:
         static void clean(int x, int y);
         static void write(int x, int y, char c);
+        static void gotoxy(int x, int y);
     protected:
 
     private:
-        static void gotoxy(int x, int y);
         utilities();
 };
 

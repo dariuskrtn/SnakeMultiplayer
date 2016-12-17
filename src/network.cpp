@@ -1,4 +1,4 @@
-#include "../include/network.h"
+#include "network.h"
 
 
 network::network()
@@ -213,4 +213,9 @@ bool network::quit()
     WSACleanup();
     }
     return true;
+}
+
+int network::countPeers()
+{
+    return peers.size();
 }

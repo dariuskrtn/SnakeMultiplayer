@@ -28,10 +28,10 @@ class network
         bool startListening();
         void stopListening();
         bool addPendingConnections();
+        int countPeers();
         bool connected;
         bool listens;
         bool host;
-                std::vector <SOCKET> peers;
     protected:
 
     private:
@@ -39,6 +39,7 @@ class network
         int iResult;
         SOCKET ListenSocket = INVALID_SOCKET;
         struct addrinfo *result = NULL, *ptr = NULL, hints;
+        std::vector <SOCKET> peers;
 };
 
 #endif // NETWORK_H

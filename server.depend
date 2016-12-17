@@ -1,24 +1,12 @@
 # depslib dependency file v1.0
-1481907551 source:e:\code\c++\server\main.cpp
+1481978124 source:e:\code\c++\server\main.cpp
 	<iostream>
 	<conio.h>
-	<include/network.h>
+	<network.h>
 	<windows.h>
+	<utilities.h>
 
-1481906536 e:\code\c++\server\include\network.h
-	<ws2tcpip.h>
-	<windows.h>
-	<winsock2.h>
-	<ws2tcpip.h>
-	<stdlib.h>
-	<stdio.h>
-	<string>
-	<vector>
-
-1481906655 source:e:\code\c++\server\src\network.cpp
-	"../include/network.h"
-
-1481906536 e:\code\c++\server\\include\network.h
+1481976954 e:\code\c++\server\include\network.h
 	<ws2tcpip.h>
 	<windows.h>
 	<winsock2.h>
@@ -28,16 +16,20 @@
 	<string>
 	<vector>
 
-1481913883 source:e:\code\c++\server\src\snake.cpp
+1481977102 e:\code\c++\server\include\utilities.h
+	<windows.h>
+	<stdio.h>
+
+1481976961 source:e:\code\c++\server\src\network.cpp
+	"network.h"
+
+1481914717 source:e:\code\c++\server\src\snake.cpp
 	"snake.h"
 
-1481913312 e:\code\c++\server\include\snake.h
+1481914739 e:\code\c++\server\include\snake.h
 	<vector>
+	<utilities.h>
 
 1481914451 source:e:\code\c++\server\src\utilities.cpp
 	"utilities.h"
-
-1481914735 e:\code\c++\server\include\utilities.h
-	<windows.h>
-	<stdio.h>
 

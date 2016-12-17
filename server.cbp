@@ -31,8 +31,15 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add directory="include" />
 		</Compiler>
+		<Unit filename="include/network.h" />
+		<Unit filename="include/snake.h" />
+		<Unit filename="include/utilities.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="src/network.cpp" />
+		<Unit filename="src/snake.cpp" />
+		<Unit filename="src/utilities.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
